@@ -6,6 +6,7 @@
 #include <termios.h>
 #include <errno.h>
 #include <stdint.h>
+#include "identification.h"
 
 // Function to configure UART
 int configure_uart(int fd, int baudrate) {
@@ -74,9 +75,11 @@ int uart_read(int fd, char *buffer, size_t buffer_size) {
     return bytes_read;
 }
 
-int main() {
-    const char *portname = "/dev/ttymxc2";
-    int baudrate = 115200;
+
+int connect_uart(const char portname, int baudrate) 
+{
+    // const char *portname = "/dev/ttymxc2";
+    // int baudrate = 115200;
     
     // Open UART device
     int uart_fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
@@ -95,15 +98,11 @@ int main() {
         printf("UART device opened and configured successfully\n");
     }
 
-
-    // Hex data:
-
     uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0x96};
     int array_size = sizeof(hex_array) / sizeof(hex_array[0]);
 
     printf("Writing hex array!\n");
 
-    // Write raw bytes to UART
     if (uart_write(uart_fd, (char*)hex_array, array_size) < 0) {
         perror("UART write failed");
         close(uart_fd);
