@@ -6,7 +6,7 @@
 #include <termios.h>
 #include <errno.h>
 #include <stdint.h>
-#include "identification.h"
+//#include "identification.h"
 
 // Function to configure UART
 int configure_uart(int fd, int baudrate) {
@@ -76,8 +76,7 @@ int uart_read(int fd, char *buffer, size_t buffer_size) {
 }
 
 
-int connect_uart(const char portname, int baudrate) 
-{
+int connect_uart(const char *portname, int baudrate) {
     // const char *portname = "/dev/ttymxc2";
     // int baudrate = 115200;
     
@@ -85,13 +84,13 @@ int connect_uart(const char portname, int baudrate)
     int uart_fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (uart_fd < 0) {
         perror("Error opening UART device");
-        return EXIT_FAILURE;
+        return -1;
     }
 
     // Configure UART
     if (configure_uart(uart_fd, baudrate) < 0) {
         close(uart_fd);
-        return EXIT_FAILURE;
+        return -1;
     }
     else
     {
@@ -106,7 +105,7 @@ int connect_uart(const char portname, int baudrate)
     if (uart_write(uart_fd, (char*)hex_array, array_size) < 0) {
         perror("UART write failed");
         close(uart_fd);
-        return EXIT_FAILURE;
+        return -1;
     }
     else {
         printf("Done writing %d bytes!\n", array_size);
@@ -158,5 +157,7 @@ int connect_uart(const char portname, int baudrate)
     }
 
     close(uart_fd);
-    return EXIT_SUCCESS;
+    return 0;
 }
+
+// int main(){return 0;}

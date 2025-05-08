@@ -10,4 +10,9 @@ int main() {
         printf("RESULT: Timeout or error occurred\n");
     }
 
+    const char *portname = "/dev/ttymxc2";
+    int baudrate = 115200;
+
+    connect_uart(portname, baudrate);
+
 }

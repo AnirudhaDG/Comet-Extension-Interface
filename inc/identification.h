@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <stdint.h>
 
-int connect_uart(const char portname, int baudrate);
+int connect_uart(const char *portname, int baudrate);
 
 int uart_read(int fd, char *buffer, size_t buffer_size);
 
