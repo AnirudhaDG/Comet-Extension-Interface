@@ -86,7 +86,6 @@ int connect_uart(const char *portname, int baudrate) {
         perror("Error opening UART device");
         return -1;
     }
-
     // Configure UART
     if (configure_uart(uart_fd, baudrate) < 0) {
         close(uart_fd);
@@ -96,11 +95,10 @@ int connect_uart(const char *portname, int baudrate) {
     {
         printf("UART device opened and configured successfully\n");
     }
-
     uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0x96};
     int array_size = sizeof(hex_array) / sizeof(hex_array[0]);
 
-    printf("Writing hex array!\n");
+    printf("Writing hex array\n");
 
     if (uart_write(uart_fd, (char*)hex_array, array_size) < 0) {
         perror("UART write failed");
@@ -108,17 +106,14 @@ int connect_uart(const char *portname, int baudrate) {
         return -1;
     }
     else {
-        printf("Done writing %d bytes!\n", array_size);
+        printf("Done writing %d bytes\n", array_size);
     }
 
 
     // Write String:
-
     // char write_data[] = "aa";
     // char read_buffer[8];
-
     // printf("Writing!\n");
-
     // if (uart_write(uart_fd, write_data, strlen(write_data)) < 0) 
     // {
     //     close(uart_fd);
@@ -129,20 +124,16 @@ int connect_uart(const char *portname, int baudrate) {
     //     printf("Done Writing!\n");
     // }
 
-    
+
     // Read Data
-
     char read_buffer[10];
-
     // Set timeout
     struct timeval timeout;
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
-    
     fd_set readfds;
     FD_ZERO(&readfds);
     FD_SET(uart_fd, &readfds);
-    
     int ret = select(uart_fd + 1, &readfds, NULL, NULL, &timeout);
     if (ret < 0) {
         perror("select failed");
@@ -151,7 +142,9 @@ int connect_uart(const char *portname, int baudrate) {
     } else {
         // Data available to read
         int bytes_read = uart_read(uart_fd, read_buffer, sizeof(read_buffer));
-        if (bytes_read > 0) {
+        if (bytes_read > 0) 
+        {
+            printf("\n------------------------------------\n");
             printf("Received %d bytes: %s\n", bytes_read, read_buffer);
         }
     }
