@@ -2,3 +2,4 @@
 *.bin
 /UART/bin
 /USB/bin
+/I2C/test
