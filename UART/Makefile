@@ -1,22 +1,37 @@
 CC = gcc
-CFLAGS = -I./inc
+CFLAGS = -I./inc -I../detection/inc
 LDFLAGS = -lgpiod
-BIN_DIR = ./bin
+
 SRC_DIR = ./src
+INC_DIR = ./inc
+BIN_DIR = ./bin
+DETECTION_BIN = ../detection/bin
 
-# Ensure bin directory exists
-$(shell mkdir -p $(BIN_DIR))
+# Source files
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(patsubst $(SRC_DIR)/%.c,$(BIN_DIR)/%.o,$(SRCS))
+DETECTION_OBJ = $(DETECTION_BIN)/detection.o
 
-# Main targets
-all: $(BIN_DIR)/master
+# Targets
+TARGET = $(BIN_DIR)/master
 
-# Main executable
-$(BIN_DIR)/master: $(BIN_DIR)/master.o $(BIN_DIR)/detection.o $(BIN_DIR)/identification.o
+# Ensure directories exist
+$(shell mkdir -p $(BIN_DIR) $(DETECTION_BIN))
+
+# Main target
+all: $(TARGET)
+
+# Link main executable
+$(TARGET): $(OBJS) $(DETECTION_OBJ)
 	$(CC) $^ $(LDFLAGS) -o $@
 
-# Object file rules
+# Compile local sources
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
+
+# # Compile detection component
+# $(DETECTION_OBJ): ../detection/src/detection.c
+# 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(BIN_DIR)

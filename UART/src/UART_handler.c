@@ -6,19 +6,20 @@
 #include <termios.h>
 #include <errno.h>
 #include <stdint.h>
-//#include "identification.h"
+#include <time.h>
+#include "UART_handler.h"
 
-// Function to configure UART
+uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0x96};
+
+
 int configure_uart(int fd, int baudrate) {
     struct termios options;
-    
-    // Get current port settings
+
     if (tcgetattr(fd, &options) != 0) {
         perror("tcgetattr failed");
         return -1;
     }
 
-    // Set baud rate
     speed_t speed;
     switch (baudrate) {
         case 9600:   speed = B9600; break;
@@ -41,7 +42,6 @@ int configure_uart(int fd, int baudrate) {
     options.c_cflag &= ~CRTSCTS;  // No hardware flow control
     options.c_cflag |= CREAD | CLOCAL; // Enable receiver, ignore modem lines
 
-    // Raw input/output
     options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
     options.c_oflag &= ~OPOST;
 
@@ -54,7 +54,6 @@ int configure_uart(int fd, int baudrate) {
     return 0;
 }
 
-// Function to write data to UART
 int uart_write(int fd, const char *data, size_t length) {
     ssize_t bytes_written = write(fd, data, length);
     if (bytes_written < 0) {
@@ -64,7 +63,6 @@ int uart_write(int fd, const char *data, size_t length) {
     return bytes_written;
 }
 
-// Function to read data from UART
 int uart_read(int fd, char *buffer, size_t buffer_size) {
     ssize_t bytes_read = read(fd, buffer, buffer_size - 1); // Leave space for null terminator
     if (bytes_read < 0) {
@@ -77,9 +75,7 @@ int uart_read(int fd, char *buffer, size_t buffer_size) {
 
 
 int connect_uart(const char *portname, int baudrate) {
-    // const char *portname = "/dev/ttymxc2";
-    // int baudrate = 115200;
-    
+
     // Open UART device
     int uart_fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (uart_fd < 0) {
@@ -95,7 +91,7 @@ int connect_uart(const char *portname, int baudrate) {
     {
         printf("UART device opened and configured successfully\n");
     }
-    uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0x96};
+    
     int array_size = sizeof(hex_array) / sizeof(hex_array[0]);
 
     printf("Writing hex array\n");
@@ -124,10 +120,8 @@ int connect_uart(const char *portname, int baudrate) {
     //     printf("Done Writing!\n");
     // }
 
-
-    // Read Data
     char read_buffer[10];
-    // Set timeout
+
     struct timeval timeout;
     timeout.tv_sec = 5;
     timeout.tv_usec = 0;
@@ -152,5 +146,3 @@ int connect_uart(const char *portname, int baudrate) {
     close(uart_fd);
     return 0;
 }
-
-// int main(){return 0;}

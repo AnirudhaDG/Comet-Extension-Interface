@@ -1,5 +1,5 @@
-#include "../inc/identification.h"
-#include "../inc/detection.h"
+#include "../inc/UART_handler.h"
+#include "../../detection/inc/detection.h"
 
 int main() {
     int result = gpio_interrupt_detect("gpiochip1", 12, 5);
