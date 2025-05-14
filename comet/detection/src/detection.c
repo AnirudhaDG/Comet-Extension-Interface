@@ -11,7 +11,7 @@ Thing to keep in mind:
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
-#include "detection.h"
+#include "../inc/detection.h"
 
 int gpio_interrupt_detect(const char *chipname, unsigned int line_num, int timeout_sec) {
     struct gpiod_chip *chip;
@@ -53,21 +53,12 @@ int gpio_interrupt_detect(const char *chipname, unsigned int line_num, int timeo
 
     // Wait for event
     ret = gpiod_line_event_wait(line, timeout_ptr);
+    if (ret == 1) {return 1;} 
+    else if (ret == 0) {return -1;} 
     
     // Clean up resources
     gpiod_line_release(line);
     gpiod_chip_close(chip);
-
-
-    if (ret == 1) 
-    {
-        return 1;  
-    } 
-
-    else if (ret == 0) 
-    {
-        return -1;
-    } 
 
     return 0;
 

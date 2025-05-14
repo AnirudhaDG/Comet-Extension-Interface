@@ -14,19 +14,10 @@ TO DO:
 #include <stdint.h>
 #include <time.h>
 #include <stdbool.h>
-#include "UART_handler.h"
-
-#define key_size 9 // start + 7 + end
+#include "../inc/UART_handler.h"
 
 #define START_BYTE 0xAA
 #define END_BYTE 0xFF
-
-uint8_t packet_buffer[key_size];
-int packet_index = 0;
-bool collecting = false;
-
-uint8_t valid_packet[key_size];
-bool packet_found = false;
 
 int configure_uart(int fd, int baudrate) {
     struct termios options;
@@ -88,27 +79,34 @@ int uart_read(int fd, char *buffer, size_t buffer_size) {
     return bytes_read;
 }
 
-void process_uart_data(const uint8_t *data, int length) {
+int process_uart_data(const uint8_t *data, int length, const uint8_t key_size, uint8_t *output) {
+    uint8_t valid_packet[key_size];
+    bool packet_found = false;
     for (int i = 0; i < length; i++) {
         if (data[i] == START_BYTE && (i + key_size - 1) < length) {
             for (int j = 0; j < key_size; j++) {
                 valid_packet[j] = data[i + j];
             }
 
-            if (valid_packet[key_size - 1] == END_BYTE) {
+            if (valid_packet[key_size - 1] == END_BYTE) 
+            {
                 packet_found = true;
-                printf("VALID PACKET: ");
-                for (int k = 0; k < key_size; k++) {
-                    printf("0x%02X ", valid_packet[k]);
-                }
-                printf("\n");
-                return;
-            } else {
-                printf("DISCARDED (Last byte not 0xFF): ");
-                for (int k = 0; k < key_size; k++) {
-                    printf("0x%02X ", valid_packet[k]);
-                }
-                printf("\n");
+                memcpy(output, valid_packet, key_size);
+                // printf("VALID PACKET: ");
+                // for (int k = 0; k < key_size; k++) {
+                //     printf("0x%02X ", valid_packet[k]);
+                // }
+                // printf("\n");
+                return 1;
+            } 
+            
+            else {
+                // printf("DISCARDED (Last byte not 0xFF): ");
+                // for (int k = 0; k < key_size; k++) {
+                //     printf("0x%02X ", valid_packet[k]);
+                // }
+                // printf("\n");
+                return 0;
             }
         }
     }
@@ -137,7 +135,8 @@ int check_timeout(int uart_fd, int time)
     }
 }
 
-int connect_uart(const char *portname, int baudrate, uint8_t hex_array[]) {
+int connect_uart(const char *portname, int baudrate, uint8_t hex_array[],const uint8_t key_size, uint8_t *output) 
+{
     int uart_fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (uart_fd < 0) {
         perror("Error opening UART device");
@@ -152,18 +151,16 @@ int connect_uart(const char *portname, int baudrate, uint8_t hex_array[]) {
     {
         printf("UART device opened and configured successfully\n");
     }
-    
-    uint8_t array_size = sizeof(hex_array) / sizeof(hex_array[0]);
 
     printf("Writing hex array\n");
 
-    if (uart_write(uart_fd, (char*)hex_array, array_size) < 0) {
+    if (uart_write(uart_fd, (char*)hex_array, key_size) < 0) {
         perror("UART write failed");
         close(uart_fd);
         return -1;
     }
     else {
-        printf("Done writing %d bytes\n", array_size);
+        printf("Done writing %d bytes\n", key_size);
     }
 
     char read_buffer[255]; //have to find a solution for this
@@ -172,7 +169,12 @@ int connect_uart(const char *portname, int baudrate, uint8_t hex_array[]) {
     {
         int num_bytes = uart_read(uart_fd, read_buffer, 255);
         if (num_bytes) {printf("Data Received!\n");}
-        process_uart_data(read_buffer, num_bytes);
+        if (process_uart_data(read_buffer, num_bytes, key_size, output))
+        {
+            printf("Data Validated");
+            return 1;
+        }
+        else {printf("Invalid Data");}
     }
 
     close(uart_fd);

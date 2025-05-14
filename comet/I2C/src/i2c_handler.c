@@ -80,7 +80,7 @@ int connect_i2c(uint8_t hex_array[], uint8_t *receive_data, const uint8_t key_si
     }
     
     printf("Sending data...\n");
-    if (i2c_send(hex_array, sizeof(hex_array))) 
+    if (i2c_send(hex_array, key_size)) 
     {
         i2c_close();
         return 1;
