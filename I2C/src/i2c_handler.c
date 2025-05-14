@@ -57,3 +57,52 @@ void i2c_close() {
     }
 }
 
+int process_i2c_data(char received_data[], const uint8_t key_size)
+{
+    if (received_data[0] == 0xaa && received_data[key_size - 1] == 0xff)
+    {
+        printf("Packet Validated\n");
+        return 1;
+    }
+    else
+    {
+        printf("Invalid Data\n");
+        return -1;
+    }
+}
+
+int connect_i2c(uint8_t hex_array[], uint8_t *receive_data, const uint8_t key_size)
+{
+    int i2c_fd = i2c_init();
+
+    if (i2c_fd < 0) {
+        return 1;
+    }
+    
+    printf("Sending data...\n");
+    if (i2c_send(hex_array, sizeof(hex_array))) 
+    {
+        i2c_close();
+        return 1;
+    }
+
+    usleep(100000);
+
+    printf("Receiving data...1 \n");
+    if (i2c_receive(receive_data, key_size)) {
+        i2c_close();
+        return 1;
+    }
+
+    usleep(100000);
+
+    i2c_close(i2c_fd);
+
+    if (process_i2c_data(receive_data, key_size) > 0)
+    {
+        return 1;
+    }
+    else{
+        return -1;
+    }
+}

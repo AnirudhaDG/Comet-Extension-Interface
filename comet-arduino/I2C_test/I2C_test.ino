@@ -1,19 +1,21 @@
 #include <Wire.h>
 
-int rec_data[8] = {};
-String key = "123e4567";
+#define comet_packet_size 8
 
-bool sentFlag = 0;
+uint8_t rec_data[comet_packet_size] = {};
+const uint8_t key[] = {0xAA, 0x01, 0x02, 0x03, 0x04, 0x06, 0x48, 0xFF};
+const int key_length = sizeof(key);
+
+bool isValid = 0;
 
 int counter = 0;
 int temp = 0;
 
 void requestEvent() {
-  Serial.println("Looking for req bit\n");
-  if (rec_data[2] == 0x01)
+  if (validate_packet() && rec_data[2] == 0x01)
   {
-    Serial.print("Sending Key\n");
-    Wire.write(key.c_str());
+    Serial.print("Validated, request byte found, sending Key\n");
+    Wire.write(key, key_length);
   }
 }
 
@@ -23,20 +25,36 @@ void receiveEvent(int bytes)
   {
     int c = Wire.read();
     rec_data[loop] = c;
-    Serial.println(rec_data[loop], HEX);
+//    Serial.print(rec_data[loop], HEX);
+//    Serial.print (" ");
   }
-  Serial.println("Array Formed");
+//  Serial.println();
+}
+
+int validate_packet()
+{
+  if (rec_data[0] == 0xAA && rec_data[comet_packet_size - 1] == 0xFF)
+  {
+//    Serial.println("Array Formed and Validated");
+    isValid = 1;
+    return 1;
+  }
+  else
+  {
+//    printf("Invalid Array");
+    isValid = 0;
+    return 0;
+  }
 }
 
 void setup() {
-  Wire.begin(0x16);                // join I2C bus with address #8
+  Wire.begin(0x16);
   Wire.onReceive(receiveEvent); // register event
   Wire.onRequest(requestEvent);
-  Serial.begin(9600);           // start serial for output
-  Serial.println("Setup done");
+  Serial.begin(115200);           // start serial for output
+  Serial.println("Setup done I2C");
 }
 
 void loop() {
-  delay(1000);
-  Serial.println(".");
+
 }

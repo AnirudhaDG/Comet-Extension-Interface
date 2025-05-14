@@ -1,40 +1,32 @@
 #include "../inc/i2c_handler.h"
 #include "../../detection/inc/detection.h"
 
-uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0x96};
+uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0xFF};
+
+const uint8_t key_size = 8;
 
 int main() {
-    int result = gpio_interrupt_detect("gpiochip1", 12, 5);
+    // int result = gpio_interrupt_detect("gpiochip1", 12, 5);
 
-    if (result == 1) {
-        printf("Interrupt detected!\n");
-    } else {
-        printf("Timeout or error occurred\n");
-        return -1;
-    }
-    
-    unsigned char receive_data[8];
-    int i2c_fd = i2c_init();
+    // if (result == 1) {
+    //     printf("Interrupt detected!\n");
+    // } else {
+    //     printf("Timeout or error occurred\n");
+    //     return -1;
+    // }
 
-    if (i2c_fd < 0) {
-        return 1;
-    }
+    uint8_t receive_data[key_size];
     
-    printf("Sending data...\n");
-    if (i2c_send(hex_array, sizeof(hex_array))) 
+    if (connect_i2c(hex_array, receive_data, key_size) > 0)
     {
-        i2c_close();
-        return 1;
+        for (size_t i = 0; i < key_size; i++) {
+            printf("0x%02x", receive_data[i]);
+            if (i < key_size - 1) {
+                printf(", ");
+            }
+        }
+        printf("\n");
     }
-
-    printf("Receiving data...\n");
-    if (i2c_receive(receive_data, 8)) {
-        i2c_close();
-        return 1;
-    }
-
-    printf("Received: '%s'\n", receive_data);
-
-    i2c_close(i2c_fd);
+    
     return 0;
 }

@@ -7,10 +7,5 @@
 #include <linux/i2c-dev.h>
 
 
-int i2c_init();
 
-int i2c_send(const unsigned char* data, int length);
-
-int i2c_receive(unsigned char* buffer, int length);
-
-void i2c_close();
+int connect_i2c(uint8_t hex_array[], uint8_t *receive_data, const uint8_t key_size);
