@@ -4,6 +4,7 @@
 comet/UART/bin
 comet/USB/bin
 comet/I2C/bin
+comet/bin
 
 comet/I2C/test
 /.vscode
