@@ -10,10 +10,10 @@ int main() {
         printf("Interrupt detected!\n");
     } else {
         printf("Timeout or error occurred\n");
+        return -1;
     }
     
     unsigned char receive_data[8];
-
     int i2c_fd = i2c_init();
 
     if (i2c_fd < 0) {

@@ -29,9 +29,9 @@ $(TARGET): $(OBJS) $(DETECTION_OBJ)
 $(BIN_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# # Compile detection component
-# $(DETECTION_OBJ): ../detection/src/detection.c
-# 	$(CC) $(CFLAGS) -c $< -o $@
+detection:
+$(DETECTION_OBJ): ../detection/src/detection.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(BIN_DIR)

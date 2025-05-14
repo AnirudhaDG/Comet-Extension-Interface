@@ -72,13 +72,3 @@ int gpio_interrupt_detect(const char *chipname, unsigned int line_num, int timeo
     return 0;
 
 }
-
-// int main() {
-//     int result = gpio_interrupt_detect("gpiochip1", 12, 5);
-//     if (result == 1) {
-//         printf("SUCCESS: Interrupt detected!\n");
-//     } else {
-//         printf("RESULT: Timeout or error occurred\n");
-//     }
-//     return 0;
-// }

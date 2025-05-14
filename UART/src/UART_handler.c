@@ -1,3 +1,9 @@
+/*
+TO DO:
+- find a way to change the value of the packet from 255 to a cont byte stream
+- find if one function call structure if better than this structure
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,10 +13,20 @@
 #include <errno.h>
 #include <stdint.h>
 #include <time.h>
+#include <stdbool.h>
 #include "UART_handler.h"
 
-uint8_t hex_array[] = {0xAA, 0x55, 0x01, 0xFF, 0x00, 0x69, 0x88, 0x96};
+#define key_size 9 // start + 7 + end
 
+#define START_BYTE 0xAA
+#define END_BYTE 0xFF
+
+uint8_t packet_buffer[key_size];
+int packet_index = 0;
+bool collecting = false;
+
+uint8_t valid_packet[key_size];
+bool packet_found = false;
 
 int configure_uart(int fd, int baudrate) {
     struct termios options;
@@ -64,25 +80,70 @@ int uart_write(int fd, const char *data, size_t length) {
 }
 
 int uart_read(int fd, char *buffer, size_t buffer_size) {
-    ssize_t bytes_read = read(fd, buffer, buffer_size - 1); // Leave space for null terminator
+    ssize_t bytes_read = read(fd, buffer, buffer_size);
     if (bytes_read < 0) {
         perror("uart_read failed");
         return -1;
     }
-    buffer[bytes_read] = '\0'; // Null-terminate the string
     return bytes_read;
 }
 
+void process_uart_data(const uint8_t *data, int length) {
+    for (int i = 0; i < length; i++) {
+        if (data[i] == START_BYTE && (i + key_size - 1) < length) {
+            for (int j = 0; j < key_size; j++) {
+                valid_packet[j] = data[i + j];
+            }
 
-int connect_uart(const char *portname, int baudrate) {
+            if (valid_packet[key_size - 1] == END_BYTE) {
+                packet_found = true;
+                printf("VALID PACKET: ");
+                for (int k = 0; k < key_size; k++) {
+                    printf("0x%02X ", valid_packet[k]);
+                }
+                printf("\n");
+                return;
+            } else {
+                printf("DISCARDED (Last byte not 0xFF): ");
+                for (int k = 0; k < key_size; k++) {
+                    printf("0x%02X ", valid_packet[k]);
+                }
+                printf("\n");
+            }
+        }
+    }
+}
 
-    // Open UART device
+int check_timeout(int uart_fd, int time)
+{
+    struct timeval timeout;
+    timeout.tv_sec = 5;
+    timeout.tv_usec = 0;
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(uart_fd, &readfds);
+
+    int ret = select(uart_fd + 1, &readfds, NULL, NULL, &timeout);
+
+    if (ret < 0) {
+        perror("select failed");
+        return -1;
+    } else if (ret == 0) {
+        printf("Timeout reached, no data received\n");
+        return -1;
+    } 
+    else {
+        return 1;
+    }
+}
+
+int connect_uart(const char *portname, int baudrate, uint8_t hex_array[]) {
     int uart_fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (uart_fd < 0) {
         perror("Error opening UART device");
         return -1;
     }
-    // Configure UART
+
     if (configure_uart(uart_fd, baudrate) < 0) {
         close(uart_fd);
         return -1;
@@ -92,7 +153,7 @@ int connect_uart(const char *portname, int baudrate) {
         printf("UART device opened and configured successfully\n");
     }
     
-    int array_size = sizeof(hex_array) / sizeof(hex_array[0]);
+    uint8_t array_size = sizeof(hex_array) / sizeof(hex_array[0]);
 
     printf("Writing hex array\n");
 
@@ -105,42 +166,13 @@ int connect_uart(const char *portname, int baudrate) {
         printf("Done writing %d bytes\n", array_size);
     }
 
+    char read_buffer[255]; //have to find a solution for this
 
-    // Write String:
-    // char write_data[] = "aa";
-    // char read_buffer[8];
-    // printf("Writing!\n");
-    // if (uart_write(uart_fd, write_data, strlen(write_data)) < 0) 
-    // {
-    //     close(uart_fd);
-    //     return EXIT_FAILURE;
-    // }
-    // else
-    // {
-    //     printf("Done Writing!\n");
-    // }
-
-    char read_buffer[10];
-
-    struct timeval timeout;
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;
-    fd_set readfds;
-    FD_ZERO(&readfds);
-    FD_SET(uart_fd, &readfds);
-    int ret = select(uart_fd + 1, &readfds, NULL, NULL, &timeout);
-    if (ret < 0) {
-        perror("select failed");
-    } else if (ret == 0) {
-        printf("Timeout reached, no data received\n");
-    } else {
-        // Data available to read
-        int bytes_read = uart_read(uart_fd, read_buffer, sizeof(read_buffer));
-        if (bytes_read > 0) 
-        {
-            printf("\n------------------------------------\n");
-            printf("Received %d bytes: %s\n", bytes_read, read_buffer);
-        }
+    if (check_timeout(uart_fd, 5) > 0)
+    {
+        int num_bytes = uart_read(uart_fd, read_buffer, 255);
+        if (num_bytes) {printf("Data Received!\n");}
+        process_uart_data(read_buffer, num_bytes);
     }
 
     close(uart_fd);

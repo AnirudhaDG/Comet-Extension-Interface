@@ -7,7 +7,9 @@
 #include <errno.h>
 #include <stdint.h>
 
-int connect_uart(const char *portname, int baudrate);
+int connect_uart(const char *portname, int baudrate, uint8_t hex_array[]);
+
+void process_uart_data(const uint8_t *read_buffer, int bytes_read);
 
 int uart_read(int fd, char *buffer, size_t buffer_size);
 
