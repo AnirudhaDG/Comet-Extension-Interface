@@ -15,34 +15,40 @@ const uint8_t key_size = 8;
 
 int main()
 {
+    printf("\nWaiting for Extension\n");
     if (gpio_interrupt_detect("gpiochip1", 12, 5) == 1)
     {
         printf("Extension detected!\n");
     } else {
-        printf("Timeout or error occurred\n");
+        printf("Timeout or error occurred");
         return -1;
     }
+    printf("\n");
 
     uint8_t receive_data[key_size];
 
-    if (connect_i2c(hex_array, receive_data, key_size) > 0)
+    int i2c_ret = connect_i2c(hex_array, receive_data, key_size);
+
+    if (i2c_ret == 1)
     {
-        for (size_t i = 0; i < key_size; i++) {
+        printf("\nConnected to extension over I2C with ID: ");
+        for (size_t i = 2; i < key_size - 2; i++) {
             printf("0x%02x", receive_data[i]);
             if (i < key_size - 1) {
-                printf(", ");
+                printf(" ");
             }
         }
-        printf("\nConnected to extension with ID: ");
+        printf("\n\n");
         return 1;
     }
 
     while(1)
     {
+        printf("\n\nAttempting Connection over UART");
         if (connect_uart(portname, baudrate, hex_array, key_size, receive_data))
         {
-            printf("\nVALID PACKET: ");
-            for (int k = 0; k < 8; k++) {
+            printf("\n\nConnected to Extension over UART with ID: ");
+            for (int k = 2; k < key_size - 2; k++) {
                 printf("0x%02X ", receive_data[k]);
             }
             printf("\n");

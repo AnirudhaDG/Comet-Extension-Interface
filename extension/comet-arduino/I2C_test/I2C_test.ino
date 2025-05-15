@@ -3,7 +3,7 @@
 #define comet_packet_size 8
 
 uint8_t rec_data[comet_packet_size] = {};
-const uint8_t key[] = {0xAA, 0x01, 0x02, 0x03, 0x04, 0x06, 0x48, 0xFF};
+const uint8_t key[] = {0xAA, 0x01, 0x02, 0x03, 0x21, 0x44, 0x48, 0xFF};
 const int key_length = sizeof(key);
 
 bool isValid = 0;
@@ -56,5 +56,7 @@ void setup() {
 }
 
 void loop() {
-
+//  Serial.println(".");
+//  if (rec_data){validate_packet();} 
+//  delay(500);
 }

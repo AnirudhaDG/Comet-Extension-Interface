@@ -139,7 +139,7 @@ int connect_uart(const char *portname, int baudrate, uint8_t hex_array[],const u
 {
     int uart_fd = open(portname, O_RDWR | O_NOCTTY | O_SYNC);
     if (uart_fd < 0) {
-        perror("Error opening UART device");
+        perror("\nError opening UART device");
         return -1;
     }
 
@@ -149,10 +149,8 @@ int connect_uart(const char *portname, int baudrate, uint8_t hex_array[],const u
     }
     else
     {
-        printf("UART device opened and configured successfully\n");
+        printf("\nUART device opened and configured successfully\n");
     }
-
-    printf("Writing hex array\n");
 
     if (uart_write(uart_fd, (char*)hex_array, key_size) < 0) {
         perror("UART write failed");

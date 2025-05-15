@@ -30,7 +30,7 @@ int i2c_init() {
 
 int i2c_send(const unsigned char* data, int length) 
 {
-    if(write(i2c_fd, data, 8) != 8)
+    if(write(i2c_fd, data, length) != length)
     {
         perror("Failed to write message");
         return -1;
@@ -76,23 +76,25 @@ int connect_i2c(uint8_t hex_array[], uint8_t *receive_data, const uint8_t key_si
     int i2c_fd = i2c_init();
 
     if (i2c_fd < 0) {
-        return 1;
+        return 0;
     }
     
-    printf("Sending data...\n");
-    if (i2c_send(hex_array, key_size)) 
+    printf("Attempting connection over I2C\n");
+    if (i2c_send(hex_array, key_size) > 0) 
     {
         i2c_close();
         return 1;
     }
+    else {return 0;}
 
     usleep(100000);
 
-    printf("Receiving data...1 \n");
+    printf("Receiving data from I2C\n");
     if (i2c_receive(receive_data, key_size)) {
         i2c_close();
         return 1;
     }
+    else{return 0;}
 
     usleep(100000);
 
