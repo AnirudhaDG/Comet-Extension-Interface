@@ -85,7 +85,7 @@ int connect_i2c(uint8_t hex_array[], uint8_t *receive_data, const uint8_t key_si
         i2c_close();
         return 1;
     }
-    else {return 0;}
+    // else {return 0;}
 
     usleep(100000);
 
