@@ -1,3 +1,8 @@
+/*
+- monitors IO changes from Netlink (hypervisor)
+- filters out events that are USB
+- prints changes to console (needs to push notifications)
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,8 +19,6 @@ void print_usb_device(struct udev_device *dev) {
     const char *devnum = udev_device_get_sysattr_value(dev, "devnum");
 
     printf("New USB device: ");
-    if (busnum && devnum) printf("Bus %s Device %s: ", busnum, devnum);
-    if (vendor && product) printf("ID %s:%s ", vendor, product);
     if (manufacturer) printf("%s ", manufacturer);
     if (product_name) printf("%s", product_name);
     printf("\n");
@@ -35,7 +38,7 @@ int main() {
     int fd = udev_monitor_get_fd(mon);
     struct pollfd fds = { .fd = fd, .events = POLLIN };
 
-    printf("Monitoring USB devices (interrupt mode)...\n");
+    printf("Monitoring...\n");
 
     while (1) {
         int ret = poll(&fds, 1, -1);
